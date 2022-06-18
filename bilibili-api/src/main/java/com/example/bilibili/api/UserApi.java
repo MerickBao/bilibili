@@ -3,6 +3,7 @@ package com.example.bilibili.api;
 import com.example.bilibili.api.support.UserSupport;
 import com.example.bilibili.domain.JsonResponse;
 import com.example.bilibili.domain.User;
+import com.example.bilibili.domain.UserInfo;
 import com.example.bilibili.service.UserService;
 import com.example.bilibili.service.util.RSAUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,4 +52,23 @@ public class UserApi {
 		String token = userService.login(user);
 		return new JsonResponse<>(token);
 	}
+
+	// 更新用户信息
+	@PutMapping("/users")
+	public JsonResponse<String> updateUsers(@RequestBody User user) throws Exception{
+		Long userId = userSupport.getCurrentUserId();
+		user.setId(userId);
+		userService.updateUsers(user);
+		return JsonResponse.success();
+	}
+
+	// 更新用户基本信息
+	@PutMapping("/user-infos")
+	public JsonResponse<String> updateUserInfos(@RequestBody UserInfo userInfo) {
+		Long userId = userSupport.getCurrentUserId();
+		userInfo.setUserId(userId);
+		userService.updateUserInfos(userInfo);
+		return JsonResponse.success();
+	}
+
 }
