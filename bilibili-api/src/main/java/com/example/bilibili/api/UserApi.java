@@ -1,13 +1,18 @@
 package com.example.bilibili.api;
 
+import com.alibaba.fastjson.JSONObject;
 import com.example.bilibili.api.support.UserSupport;
 import com.example.bilibili.domain.JsonResponse;
+import com.example.bilibili.domain.PageResult;
 import com.example.bilibili.domain.User;
 import com.example.bilibili.domain.UserInfo;
+import com.example.bilibili.service.UserFollowingService;
 import com.example.bilibili.service.UserService;
 import com.example.bilibili.service.util.RSAUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @Author: merickbao
@@ -23,6 +28,9 @@ public class UserApi {
 
 	@Autowired
 	private UserSupport userSupport;
+
+	@Autowired
+	UserFollowingService userFollowingService;
 
 	// 获取RSA公钥
 	@GetMapping("/rsa-pks")
@@ -55,7 +63,7 @@ public class UserApi {
 
 	// 更新用户信息
 	@PutMapping("/users")
-	public JsonResponse<String> updateUsers(@RequestBody User user) throws Exception{
+	public JsonResponse<String> updateUsers(@RequestBody User user) throws Exception {
 		Long userId = userSupport.getCurrentUserId();
 		user.setId(userId);
 		userService.updateUsers(user);
@@ -71,4 +79,25 @@ public class UserApi {
 		return JsonResponse.success();
 	}
 
+	// 分页查询用户信息
+	/*
+	 * @param: no : 当前的页码
+	 * @param： size ： 页的大小
+	 * @param: nickname: 昵称，用于模糊查询，非必要
+	 * */
+	@GetMapping("/user-infos")
+	public JsonResponse<PageResult<UserInfo>> pageListUserInfos(@RequestParam Integer no, @RequestParam Integer size, String nickname) {
+		Long userId = userSupport.getCurrentUserId();
+		JSONObject params = new JSONObject();
+		params.put("no", no);
+		params.put("size", size);
+		params.put("nickname", nickname);
+		params.put("userId", userId);
+		PageResult<UserInfo> result = userService.pageListUserInfos(params);
+		if (result.getTotal() > 0) {
+			List<UserInfo> checkedUserInfoList = userFollowingService.checkFollowingStatus(result.getList(), userId);
+			result.setList(checkedUserInfoList);
+		}
+		return new JsonResponse<>(result);
+	}
 }
