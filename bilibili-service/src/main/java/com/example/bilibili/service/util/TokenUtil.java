@@ -33,6 +33,18 @@ public class TokenUtil {
                 .sign(algorithm);
     }
 
+    public static String generateRefreshToken(Long userId) throws Exception {
+        // 用于JWT加密的算法
+        Algorithm algorithm = Algorithm.RSA256(RSAUtil.getPublicKey(), RSAUtil.getPrivateKey());
+        // 设置token过期时间 (30 sec)
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.DAY_OF_MONTH, 7);
+        return JWT.create().withKeyId(String.valueOf(userId))
+                .withIssuer(ISSUER)
+                .withExpiresAt(calendar.getTime())
+                .sign(algorithm);
+    }
 
     public static Long verifyToken(String token) {
         try {
@@ -47,4 +59,5 @@ public class TokenUtil {
             throw new ConditionException("非法用户token！");
         }
     }
+
 }
