@@ -1,24 +1,25 @@
 package com.example.bilibili.service.util;
 
 import com.example.bilibili.service.exception.ConditionException;
+import com.github.tobato.fastdfs.domain.fdfs.FileInfo;
 import com.github.tobato.fastdfs.domain.fdfs.MetaData;
 import com.github.tobato.fastdfs.domain.fdfs.StorePath;
 import com.github.tobato.fastdfs.service.AppendFileStorageClient;
 import com.github.tobato.fastdfs.service.FastFileStorageClient;
 import com.mysql.cj.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @Author: merickbao
@@ -174,5 +175,51 @@ public class FastDFSUtil {
 	// 删除文件
 	public void deleteFile(String filePath) {
 		fastFileStorageClient.deleteFile(filePath);
+	}
+
+	@Value("${fdfs.http.storage-addr}")
+	private String httpStorageAddr;
+
+	// 分片获取文件信息
+	public void viewVideoOnlineBySlices(HttpServletRequest request, HttpServletResponse response, String path) throws Exception {
+		FileInfo fileInfo =  fastFileStorageClient.queryFileInfo(DEFAULT_GROUP, path);
+		// 文件的总大小
+		long totalFileSize = fileInfo.getFileSize();
+		// 拼接问价实际url
+		String url = httpStorageAddr + path;
+		// 设置请求头
+		Enumeration<String> headerNames = request.getHeaderNames();
+		Map<String, Object> headers = new HashMap<>();
+		while (headerNames.hasMoreElements()) {
+			String header = headerNames.nextElement();
+			headers.put(header, request.getHeader(header));
+		}
+		// 获取请求头中的range字段信息
+		String rangeStr = request.getHeader("Range");
+		String[] range;
+		if (StringUtils.isNullOrEmpty(rangeStr)) {
+			rangeStr = "bytes=0-" + (totalFileSize - 1);
+		}
+		range = rangeStr.split("bytes=|-");
+		// 计算要获取文件的开始和结束位置
+		long begin = 0;
+		if (range.length >= 2) {
+			begin = Long.parseLong(range[1]);
+		}
+		long end = totalFileSize - 1;
+		if (range.length >= 3) {
+			end = Long.parseLong(range[2]);
+		}
+		long len = (end - begin) + 1;
+		// 生成响应头中的字段信息
+		String contentRange = "bytes " + begin + "-" + end + "/" + totalFileSize;
+		response.setHeader("Content-Range", contentRange);
+		response.setHeader("Accept-Ranges", "bytes");
+		response.setHeader("Content-Type", "video/mp4");
+		response.setContentLength((int) len);
+		response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+
+		// 进行实际请求
+		HttpUtil.get(url, headers, response);
 	}
 }

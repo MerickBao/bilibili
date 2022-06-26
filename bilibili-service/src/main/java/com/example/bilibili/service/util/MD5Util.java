@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
  * MD5加密
  * 单向加密算法
  * 特点：加密速度快，不需要秘钥，但是安全性不高，需要搭配随机盐值使用
- *
  */
 public class MD5Util {
 
@@ -44,7 +43,7 @@ public class MD5Util {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		byte[] buffer = new byte[1024];
 		int byteRead;
-		while((byteRead = fis.read(buffer)) > 0){
+		while ((byteRead = fis.read(buffer)) > 0) {
 			baos.write(buffer, 0, byteRead);
 		}
 		fis.close();
