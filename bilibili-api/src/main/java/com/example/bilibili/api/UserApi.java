@@ -81,7 +81,7 @@ public class UserApi {
 		return JsonResponse.success();
 	}
 
-	// 分页查询用户信息
+	// 分页查询用户关注者的信息
 	/*
 	 * @param: no : 当前的页码
 	 * @param： size ： 页的大小

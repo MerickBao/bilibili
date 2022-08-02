@@ -26,7 +26,7 @@ public class TokenUtil {
         // 设置token过期时间 (30 sec)
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.add(Calendar.HOUR, 24);
+        calendar.add(Calendar.SECOND, 600);
         return JWT.create().withKeyId(String.valueOf(userId))
                 .withIssuer(ISSUER)
                 .withExpiresAt(calendar.getTime())
