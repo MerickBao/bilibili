@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Demo</title>
+</head>
+<body>
+    <h1>WebSocket Demo</h1>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type your message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const webSocket = new WebSocket("ws://localhost/websocket");
+
+        webSocket.onopen = function (event) {
+            showMessage("WebSocket connection established.");
+        };
+
+        webSocket.onmessage = function (event) {
+            showMessage("Received message: " + event.data);
+        };
+
+        webSocket.onclose = function (event) {
+            showMessage("WebSocket connection closed.");
+        };
+
+        webSocket.onerror = function (event) {
+            showMessage("WebSocket error occurred.");
+        };
+
+        function showMessage(message) {
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML += "<p>" + message + "</p>";
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value;
+            webSocket.send(message);
+            showMessage("Sent message: " + message);
+            messageInput.value = ""; // 清空输入框
+        }
+    </script>
+</body>
+</html>

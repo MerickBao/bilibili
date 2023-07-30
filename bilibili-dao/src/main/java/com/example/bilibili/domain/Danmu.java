@@ -12,7 +12,6 @@ public class Danmu {
     private Long id;
 
     private Long userId;
-
     private Long videoId;
 
     private String content;
